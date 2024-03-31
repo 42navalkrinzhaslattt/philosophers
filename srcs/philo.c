@@ -1,8 +1,18 @@
-//#include "../includes/philo.h"
+#include "../includes/philo.h"
 #include "philo.h"
+
+//start
+//think
+//take a left fork if free - if not wait
+//take a right fork if free - if not wait
+//eat
+//sleep
+//repeat if nobody died and philo isnt finished
+//when somebody is writing, nobody should die or write
 
 void	action_log(t_philo *philo, int action)
 {
+	pthread_mutex_lock(&philo->data->death);
 	pthread_mutex_lock(&philo->data->write);
 	printf("%lli %d ", ft_gettime(philo->start_time), philo->index);
 	if (action == FORK && !philo->funeral)
@@ -16,62 +26,72 @@ void	action_log(t_philo *philo, int action)
 	else if (action == DIE && !philo->funeral)
 		printf("died\n");
 	pthread_mutex_unlock(&philo->data->write);
+	pthread_mutex_unlock(&philo->data->death);
+}
+
+void	eat_even(t_philo *philo)
+{
+	if (ft_gettime(philo->last_meal)  < philo->eat_ms + philo->sleep_ms + 10)
+		usleep(500);
+	pthread_mutex_lock(philo->fork_r);
+	action_log(philo, FORK);
+	pthread_mutex_lock(philo->fork_l);
+	action_log(philo, FORK);
+	pthread_mutex_lock(&philo->meal);
+	if (philo->left_meal)
+		philo->left_meal--;
+	if (!philo->left_meal)
+		philo->finished = 1;
+	philo->last_meal = ft_gettime(philo->start_time);
+	action_log(philo, EAT);
+	pthread_mutex_unlock(&philo->meal);
+	usleep(philo->data->eat_ms * 1000);
+	pthread_mutex_unlock(philo->fork_l);
+	pthread_mutex_unlock(philo->fork_r);
+}
+
+void	eat_odd(t_philo *philo)
+{
+	if (ft_gettime(philo->last_meal)  < philo->eat_ms + philo->sleep_ms + 10)
+		usleep(500);//???
+	pthread_mutex_lock(philo->fork_l);
+	action_log(philo, FORK);
+	pthread_mutex_lock(philo->fork_r);
+	action_log(philo, FORK);
+	pthread_mutex_lock(&philo->meal);
+	if (philo->left_meal)
+		philo->left_meal--;
+	if (!philo->left_meal)
+		philo->finished = 1;
+	philo->last_meal = ft_gettime(philo->start_time);
+	action_log(philo, EAT);
+	pthread_mutex_unlock(&philo->meal);
+	usleep(philo->data->eat_ms * 1000);
+	pthread_mutex_unlock(philo->fork_r);
+	pthread_mutex_unlock(philo->fork_l);
 }
 
 void	beholder(t_philo *philo)
 {
-	int	i;
+	int i;
 
 	while (1)
 	{
 		pthread_mutex_lock(&philo->meal);
-		if (philo->left_meal && philo->last_meal >= philo->data->die_ms)
+		if (philo->left_meal && ft_gettime(philo->last_meal) > philo->data->die_ms)
 		{
-			printf("index: %d last meal: %lli die_ms: %d\n", philo->index, philo->last_meal, philo->data->die_ms);
-			pthread_mutex_unlock(&philo->meal);
 			action_log(philo, DIE);
 			pthread_mutex_lock(&philo->data->death);
 			i = -1;
 			while (++i < philo->data->nb_philo)
 				philo->data->philo[i].funeral = 1;
 			pthread_mutex_unlock(&philo->data->death);
-			return ;
+			pthread_mutex_unlock(&philo->meal);
 		}
 		else if (philo->finished)
-			return (printf("philosopher %d is finihed\n", philo->index), pthread_mutex_unlock(&philo->meal), free(NULL));
+			return (pthread_mutex_unlock(&philo->meal), free(NULL));
 		pthread_mutex_unlock(&philo->meal);
 	}
-}
-
-void	philo_eat(t_philo *philo)
-{
-	if (ft_gettime(philo->last_meal < philo->data->eat_ms + philo->data->sleep_ms + 10))
-		usleep(500);
-	if (philo->index % 2 == 0)
-	{
-		pthread_mutex_lock(philo->fork_l);
-		action_log(philo, FORK);
-		pthread_mutex_lock(philo->fork_r);
-	}
-	else
-	{
-		pthread_mutex_lock(philo->fork_r);
-		action_log(philo, FORK);
-		pthread_mutex_lock(philo->fork_l);
-	}
-	action_log(philo, FORK);
-	philo->last_meal = ft_gettime(philo->start_time);
-	pthread_mutex_lock(&philo->meal);
-	philo->left_meal -= (philo->left_meal > 0);
-	philo->finished = 1 - (philo->left_meal != 0);
-	action_log(philo, EAT);
-	pthread_mutex_unlock(&philo->meal);
-	usleep(philo->data->eat_ms);
-	if (philo->index % 2 == 0)
-		pthread_mutex_unlock(philo->fork_r);
-	pthread_mutex_unlock(philo->fork_l);
-	if (philo->index % 2 == 1)
-		pthread_mutex_unlock(philo->fork_r);
 }
 
 void	routine(t_philo *philo)
@@ -83,9 +103,12 @@ void	routine(t_philo *philo)
 			break ;
 		pthread_mutex_unlock(&philo->data->death);
 		action_log(philo, THINK);
-		philo_eat(philo);
+		if (philo->index % 2)
+			eat_odd(philo);
+		else
+			eat_even(philo);
 		action_log(philo, SLEEP);
-		usleep(philo->data->sleep_ms * 1000);
+		usleep(philo->data->eat_ms * 1000);
 		pthread_mutex_lock(&philo->data->death);
 	}
 	pthread_mutex_unlock(&philo->data->death);

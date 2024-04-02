@@ -32,7 +32,6 @@ typedef struct s_philo
 	t_pth			pthread;
 	t_pth			monitor;
 	int				index;
-	int				finished;
 	int				left_meal;
 	int				funeral;
 	long long		last_meal;

@@ -9,7 +9,6 @@ void	init_philo(t_data *data)
 	while (++i < data->nb_philo)
 	{
 		data->philo[i].data = data;
-		data->philo[i].finished = 0;
 		data->philo[i].index = i + 1;
 		data->philo[i].funeral = 0;
 		data->philo[i].fork_l = &data->forks[(i - 1 + data->nb_philo) % data->nb_philo];
@@ -17,8 +16,10 @@ void	init_philo(t_data *data)
 		data->philo[i].last_meal = 0;
 		data->philo[i].start_time = 0;
 		data->philo[i].left_meal = data->nb_eat;
+		data->philo[i].last_meal = 0;
 		pthread_mutex_init(&data->philo[i].meal, NULL);
 		pthread_mutex_init(&data->forks[i], NULL);
+		data->philo[i].start_time = ft_gettime(0);
 	}
 }
 

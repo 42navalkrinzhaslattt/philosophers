@@ -14,7 +14,8 @@ void	action_log(t_philo *philo, int action)
 {
 	pthread_mutex_lock(&philo->data->death);
 	pthread_mutex_lock(&philo->data->write);
-	printf("%lli %d ", ft_gettime(philo->start_time), philo->index);
+	if (!philo->funeral)
+		printf("%lli %d ", ft_gettime(philo->start_time), philo->index);
 	if (action == FORK && !philo->funeral)
 		printf("has taken a fork\n");
 	else if (action == EAT && !philo->funeral)
@@ -31,7 +32,7 @@ void	action_log(t_philo *philo, int action)
 
 void	eat_even(t_philo *philo)
 {
-	if (ft_gettime(philo->last_meal)  < philo->eat_ms + philo->sleep_ms + 10)
+	if (ft_gettime(philo->last_meal)  < philo->data->eat_ms + philo->data->sleep_ms + 10)
 		usleep(500);
 	pthread_mutex_lock(philo->fork_r);
 	action_log(philo, FORK);
@@ -40,8 +41,6 @@ void	eat_even(t_philo *philo)
 	pthread_mutex_lock(&philo->meal);
 	if (philo->left_meal)
 		philo->left_meal--;
-	if (!philo->left_meal)
-		philo->finished = 1;
 	philo->last_meal = ft_gettime(philo->start_time);
 	action_log(philo, EAT);
 	pthread_mutex_unlock(&philo->meal);
@@ -52,7 +51,7 @@ void	eat_even(t_philo *philo)
 
 void	eat_odd(t_philo *philo)
 {
-	if (ft_gettime(philo->last_meal)  < philo->eat_ms + philo->sleep_ms + 10)
+	if (ft_gettime(philo->last_meal)  < philo->data->eat_ms + philo->data->sleep_ms + 10)
 		usleep(500);//???
 	pthread_mutex_lock(philo->fork_l);
 	action_log(philo, FORK);
@@ -61,8 +60,6 @@ void	eat_odd(t_philo *philo)
 	pthread_mutex_lock(&philo->meal);
 	if (philo->left_meal)
 		philo->left_meal--;
-	if (!philo->left_meal)
-		philo->finished = 1;
 	philo->last_meal = ft_gettime(philo->start_time);
 	action_log(philo, EAT);
 	pthread_mutex_unlock(&philo->meal);
@@ -78,7 +75,7 @@ void	beholder(t_philo *philo)
 	while (1)
 	{
 		pthread_mutex_lock(&philo->meal);
-		if (philo->left_meal && ft_gettime(philo->last_meal) > philo->data->die_ms)
+		if (philo->left_meal && ft_gettime(philo->start_time + philo->last_meal) > philo->data->die_ms)
 		{
 			action_log(philo, DIE);
 			pthread_mutex_lock(&philo->data->death);
@@ -87,8 +84,9 @@ void	beholder(t_philo *philo)
 				philo->data->philo[i].funeral = 1;
 			pthread_mutex_unlock(&philo->data->death);
 			pthread_mutex_unlock(&philo->meal);
+			return ;
 		}
-		else if (philo->finished)
+		else if (!philo->left_meal)
 			return (pthread_mutex_unlock(&philo->meal), free(NULL));
 		pthread_mutex_unlock(&philo->meal);
 	}
@@ -97,18 +95,18 @@ void	beholder(t_philo *philo)
 void	routine(t_philo *philo)
 {
 	pthread_mutex_lock(&philo->data->death);
-	while (!philo->finished && !philo->funeral)
+	while (philo->left_meal && !philo->funeral)
 	{
-		if (philo->data->nb_philo == 1)
-			break ;
 		pthread_mutex_unlock(&philo->data->death);
 		action_log(philo, THINK);
+		if (philo->data->nb_philo == 1)
+			return ;
 		if (philo->index % 2)
 			eat_odd(philo);
 		else
 			eat_even(philo);
 		action_log(philo, SLEEP);
-		usleep(philo->data->eat_ms * 1000);
+		usleep(philo->data->sleep_ms * 1000);
 		pthread_mutex_lock(&philo->data->death);
 	}
 	pthread_mutex_unlock(&philo->data->death);
@@ -124,18 +122,16 @@ int	main(int ac, char **av)
 	parse_input(&data, ac, av);
 	i = -1;
 	while (++i < data.nb_philo)
-	{
-		data.philo[i].start_time = ft_gettime(0);
-		data.philo[i].last_meal = 0;
 		pthread_create(&data.philo[i].pthread, NULL, (void *)routine, &data.philo[i]);
-		pthread_create(&data.philo[i].monitor, NULL, (void *)beholder, &data.philo[i]);
-	}
 	i = -1;
 	while (++i < data.nb_philo)
-	{
+		pthread_create(&data.philo[i].monitor, NULL, (void *)beholder, &data.philo[i]);
+	i = -1;
+	while (++i < data.nb_philo)
 		pthread_join(data.philo[i].pthread, NULL);
+	i = -1;
+	while (++i < data.nb_philo)
 		pthread_join(data.philo[i].monitor, NULL);
-	}
 	free_all(&data);
 	return (EXIT_SUCCESS);
 }

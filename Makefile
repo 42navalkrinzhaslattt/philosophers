@@ -24,7 +24,7 @@ CFLAGS	= -Wall -Werror -Wextra
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) -lpthread -g -o $(NAME)
+	$(CC) $(CFLAGS) $(OBJ) -lpthread -g -fsanitize=thread -o $(NAME)
 
 bonus: $(BONUS_OBJ)
 	$(CC) $(CFLAGS) $(BONUS_OBJ) -o $(NAME)

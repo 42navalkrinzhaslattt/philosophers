@@ -23,6 +23,16 @@
 typedef pthread_mutex_t t_mutex;
 typedef pthread_t t_pth;
 typedef struct s_data	t_data;
+typedef struct s_group	t_group;
+typedef struct s_philo	t_philo;
+
+typedef struct s_group
+{
+	int			index;
+	int			iteration;
+	int			round_len;
+	int			eat_ms;
+}	t_group;
 
 typedef struct s_philo
 {
@@ -36,6 +46,7 @@ typedef struct s_philo
 	int				funeral;
 	long long		last_meal;
 	long long		start_time;
+	t_group			*group;
 	t_data			*data;
 }	t_philo;
 
@@ -46,7 +57,9 @@ typedef struct s_data
 	int			eat_ms;
 	int			sleep_ms;
 	int			nb_eat;
+	int			nb_group;
 	t_philo		*philo;
+	t_group		*group;
 	t_mutex		*forks;
 	t_mutex		write;
 	t_mutex		death;
@@ -61,5 +74,12 @@ void	exit_error(int status, t_data *data);
 long	ft_atoi(const char *nptr);
 long long	ft_gettime(long long start);
 void	free_all(t_data *data);
+
+//routine.c
+//void	action_log(t_philo *philo, int action);
+//void	eat_even(t_philo *philo);
+//void	eat_odd(t_philo *philo);
+//void	beholder(t_philo *philo);
+//void	routine(t_philo *philo);
 
 #endif

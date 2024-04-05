@@ -32,6 +32,7 @@ void	parse_input(t_data *data, int ac, char **av)
 	data->eat_ms = ft_atoi(av[3]);
 	data->sleep_ms = ft_atoi(av[4]);
 	data->nb_eat = -1;
+	data->eat_flag = 0;
 	if (ac == 6)
 		data->nb_eat = ft_atoi(av[5]);
 	if (data->nb_philo < 0 || data->die_ms < 0 || data->eat_ms < 0

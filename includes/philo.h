@@ -32,6 +32,9 @@ typedef struct s_group
 	int			iteration;
 	int			round_len;
 	int			eat_ms;
+	int			size;
+	int			counter;
+	t_mutex		count;
 }	t_group;
 
 typedef struct s_philo
@@ -58,11 +61,13 @@ typedef struct s_data
 	int			sleep_ms;
 	int			nb_eat;
 	int			nb_group;
+	int			eat_flag;
 	t_philo		*philo;
 	t_group		*group;
 	t_mutex		*forks;
 	t_mutex		write;
 	t_mutex		death;
+	t_mutex		flag;
 }	t_data;
 
 //parse.c

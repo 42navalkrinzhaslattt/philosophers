@@ -16,7 +16,7 @@ INC_DIR = includes
 
 CC		= cc
 
-CFLAGS	= -Wall -Werror -Wextra
+CFLAGS	= -Wall -Werror -Wextra -g #-fsanitize=thread
 
 %.o: %.c $(INC_DIR)/philo.h
 	$(CC) $(CFLAGS) -I ./includes -c  $< -o $@
@@ -24,7 +24,7 @@ CFLAGS	= -Wall -Werror -Wextra
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) -lpthread -g -fsanitize=thread -o $(NAME)
+	$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
 
 bonus: $(BONUS_OBJ)
 	$(CC) $(CFLAGS) $(BONUS_OBJ) -o $(NAME)

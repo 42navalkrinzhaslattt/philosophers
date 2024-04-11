@@ -29,7 +29,6 @@ typedef struct s_philo	t_philo;
 typedef struct s_group
 {
 	int			index;
-	int			iteration;
 	int			round_len;
 	int			eat_ms;
 	int			size;
@@ -71,20 +70,22 @@ typedef struct s_data
 }	t_data;
 
 //parse.c
+void	init_groups(t_data *data);
 void	init_philo(t_data *data);
-void	parse_input(t_data *data, int ac, char **av);
+int		parse_input(t_data *data, int ac, char **av);
 
 //utils.c
-void	exit_error(int status, t_data *data);
-long	ft_atoi(const char *nptr);
+void		action_log(t_philo *philo, int action, long long timestamp);
+int			print_error(int status, t_data *data);
+long		ft_atoi(const char *nptr);
 long long	ft_gettime(long long start);
-void	free_all(t_data *data);
+void		free_all(t_data *data);
 
 //routine.c
-//void	action_log(t_philo *philo, int action);
-//void	eat_even(t_philo *philo);
-//void	eat_odd(t_philo *philo);
-//void	beholder(t_philo *philo);
-//void	routine(t_philo *philo);
+void	beholder(t_philo *philo);
+void	philo_eat(t_philo *philo, int eat_start);
+void	philo_round(t_philo *philo, t_data *data, int eat_start, int sleep_start);
+void	routine(t_philo *philo);
+void	controler(t_data *data);
 
 #endif

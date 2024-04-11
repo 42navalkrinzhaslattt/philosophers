@@ -1,7 +1,46 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   utils.c                                            :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: nam-vu <nam-vu@student.42berlin.de>        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2024/04/11 07:38:00 by nam-vu            #+#    #+#             */
+/*   Updated: 2024/04/11 07:38:00 by nam-vu           ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 //#include "../includes/philo.h"
 #include "philo.h"
 
-void	exit_error(int status, t_data *data)
+void	action_log(t_philo *philo, int action, long long timestamp)
+{
+	pthread_mutex_lock(&philo->data->death);
+	pthread_mutex_lock(&philo->data->write);
+	if (!philo->funeral && philo->group->index == 1)
+		printf("\t");
+	if (!philo->funeral && philo->group->index == 2)
+		printf("\t\t");
+	timestamp = -1;
+	if (!philo->funeral && timestamp == -1)
+		printf("%lli %d ", ft_gettime(philo->start_time), philo->index);
+	else if (!philo->funeral && timestamp >= 0)
+		printf("%lli %d ", timestamp, philo->index);
+	if (action == FORK && !philo->funeral)
+		printf("has taken a fork\n");
+	else if (action == EAT && !philo->funeral)
+		printf("is eating\n");
+	else if (action == SLEEP && !philo->funeral)
+		printf("is sleeping\n");
+	else if (action == THINK && !philo->funeral)
+		printf("is thinking\n");
+	else if (action == DIE && !philo->funeral)
+		printf("died\n");
+	pthread_mutex_unlock(&philo->data->write);
+	pthread_mutex_unlock(&philo->data->death);
+}
+
+int	print_error(int status, t_data *data)
 {
 	write(2, "philo: ", 7);
 	if (status == INV_ARG_STATUS)
@@ -10,7 +49,7 @@ void	exit_error(int status, t_data *data)
 		write(2, ERR_MALLOC_MSG, 13);
 	if (status != INV_ARG_STATUS)
 		free_all(data);
-	exit(status);
+	return (0);
 }
 
 long	ft_atoi(const char *nptr)
@@ -38,7 +77,7 @@ long	ft_atoi(const char *nptr)
 		i++;
 	}
 	if (nptr[i] != 0)
-		exit_error(INV_ARG_STATUS, NULL);
+		print_error(INV_ARG_STATUS, NULL);
 	return (res * sign);
 }
 
@@ -54,15 +93,23 @@ void	free_all(t_data *data)
 {
 	int i;
 
-	i = -1;
 	if (data->nb_philo)
 	{
+		i = -1;
+		while (++i < data->nb_group)
+			pthread_mutex_destroy(&data->group[i].count);
+		free(data->group);
+		i = -1;
 		while (++i < data->nb_philo)
+		{
 			pthread_mutex_destroy(&data->forks[i]);
+			pthread_mutex_destroy(&data->philo[i].meal);
+		}
 		free(data->philo);
 	}
 	pthread_mutex_destroy(&data->write);
 	pthread_mutex_destroy(&data->death);
+	pthread_mutex_destroy(&data->flag);
 	if (data->forks)
 		free(data->forks);
 }

@@ -62,7 +62,7 @@ void	controler(t_data *data)
 		else
 			sleep_amount = 500;
 		pthread_mutex_unlock(&data->flag);
-		usleep(sleep_amount);
+		ft_usleep(sleep_amount);
 		pthread_mutex_lock(&data->philo[data->nb_philo - 1].meal);
 		pthread_mutex_lock(&data->death);
 	}
@@ -91,7 +91,7 @@ void	philo_eat(t_philo *philo, int eat_start)
 		philo->left_meal--;
 	philo->last_meal = ft_gettime(philo->start_time);
 	pthread_mutex_unlock(&philo->meal);
-	usleep(philo->group->eat_ms * 1000);
+	ft_usleep(philo->group->eat_ms * 1000);
 	pthread_mutex_unlock(forks[1]);
 	pthread_mutex_unlock(forks[0]);
 }
@@ -103,7 +103,7 @@ void	philo_round(t_philo *philo, t_data *data,
 	while (!philo->funeral)
 	{
 		pthread_mutex_unlock(&data->death);
-		usleep(500);
+		ft_usleep(500);
 		pthread_mutex_lock(&data->flag);
 		if (philo->group->index == data->eat_flag)
 		{
@@ -122,7 +122,7 @@ void	philo_round(t_philo *philo, t_data *data,
 	if (!philo->left_meal)
 		return ;
 	action_log(philo, SLEEP, sleep_start);
-	usleep(philo->data->sleep_ms * 1000);
+	ft_usleep(philo->data->sleep_ms * 1000);
 }
 
 void	routine(t_philo *philo)
@@ -141,7 +141,7 @@ void	routine(t_philo *philo)
 	while (philo->left_meal && !philo->funeral)
 	{
 		pthread_mutex_unlock(&philo->data->death);
-		usleep((eat_start - think_start) * 1000);
+		ft_usleep((eat_start - think_start) * 1000);
 		philo_round(philo, philo->data, eat_start, sleep_start);
 		eat_start += philo->group->round_len;
 		think_start = eat_start + philo->group->eat_ms

@@ -5,18 +5,45 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: nam-vu <nam-vu@student.42berlin.de>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/04/11 07:38:00 by nam-vu            #+#    #+#             */
-/*   Updated: 2024/04/11 07:38:00 by nam-vu           ###   ########.fr       */
+/*   Created: 2024/04/14 10:14:17 by nam-vu            #+#    #+#             */
+/*   Updated: 2024/04/14 10:14:17 by nam-vu           ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-//#include "../includes/philo.h"
 #include "philo.h"
+
+void	free_all(t_data *data)
+{
+	int	i;
+
+	if (data->nb_philo)
+	{
+		i = -1;
+		while (++i < data->nb_group)
+		{
+			sem_close(data->group[i].count);
+			sem_unlink(data->group[i].count_name);
+		}
+		free(data->group);
+		i = -1;
+		while (++i < data->nb_philo)
+		{
+			sem_close(data->philo[i].meal);
+			sem_unlink(data->philo[i].meal_name);
+		}
+		free(data->philo);
+	}
+	sem_close(data->write);
+	sem_close(data->death);
+	sem_close(data->forks);
+	sem_unlink(SEM_WRITE);
+	sem_unlink(SEM_DEATH);
+	sem_unlink(SEM_FORKS);
+}
 
 void	action_log(t_philo *philo, int action, long long timestamp)
 {
-	pthread_mutex_lock(&philo->data->death);
-	pthread_mutex_lock(&philo->data->write);
+	sem_wait(philo->data->write);
 	if (!philo->funeral && philo->group->index == 1)
 		printf("\t");
 	if (!philo->funeral && philo->group->index == 2)
@@ -36,8 +63,7 @@ void	action_log(t_philo *philo, int action, long long timestamp)
 		printf("is thinking\n");
 	else if (action == DIE && !philo->funeral)
 		printf("died\n");
-	pthread_mutex_unlock(&philo->data->write);
-	pthread_mutex_unlock(&philo->data->death);
+	sem_post(philo->data->write);
 }
 
 int	print_error(int status, t_data *data)
@@ -87,28 +113,4 @@ long long	ft_gettime(long long start)
 
 	gettimeofday(&tv, NULL);
 	return (tv.tv_sec * 1000 + tv.tv_usec / 1000 - start);
-}
-
-void	free_all(t_data *data)
-{
-	int	i;
-
-	if (data->nb_philo)
-	{
-		i = -1;
-		while (++i < data->nb_group)
-			pthread_mutex_destroy(&data->group[i].count);
-		free(data->group);
-		i = -1;
-		while (++i < data->nb_philo)
-		{
-			pthread_mutex_destroy(&data->forks[i]);
-			pthread_mutex_destroy(&data->philo[i].meal);
-		}
-		free(data->philo);
-		free(data->forks);
-	}
-	pthread_mutex_destroy(&data->write);
-	pthread_mutex_destroy(&data->death);
-	pthread_mutex_destroy(&data->flag);
 }

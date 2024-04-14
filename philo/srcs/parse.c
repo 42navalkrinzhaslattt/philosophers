@@ -32,7 +32,7 @@ void	init_groups(t_data *data)
 		data->group[i].counter = 0;
 		if (i == data->nb_group - 1)
 			data->group[i].counter = data->group[i].size;
-		pthread_mutex_init(&data->group[i].count, NULL);
+		pthread_mutex_init(&data->group[i].count);
 	}
 	i = -1;
 	while (++i < data->nb_philo)

@@ -13,12 +13,19 @@
 #ifndef PHILO_H
 # define PHILO_H
 
-# include <stdint.h>
-# include <unistd.h>
-# include <stdlib.h>
-# include <stdio.h>
-# include <pthread.h>
+# include <semaphore.h>
+# include <sys/types.h>
 # include <sys/time.h>
+# include <sys/wait.h>
+# include <string.h>
+# include <pthread.h>
+# include <signal.h>
+# include <stdlib.h>
+# include <unistd.h>
+# include <stdio.h>
+# include <fcntl.h>
+# include <limits.h>
+# include <stdint.h>
 
 # define THINK 1
 # define SLEEP 2
@@ -26,14 +33,20 @@
 # define FORK 4
 # define DIE 5
 
+# define SEM_FORKS "/fork"
+# define SEM_WRITE "/write"
+# define SEM_DEATH "/death"
+# define SEM_FLAG "/flag"
+
 # define INV_ARG_STATUS 1
 # define ERR_MALLOC_STATUS 2
 
 # define INV_ARG_MSG "Invalid arguments\n"
 # define ERR_MALLOC_MSG "Malloc error\n"
 
-typedef pthread_mutex_t	t_mutex;
 typedef pthread_t		t_pth;
+typedef sem_t			t_sem;
+typedef pid_t			t_pid;
 typedef struct s_data	t_data;
 typedef struct s_group	t_group;
 typedef struct s_philo	t_philo;
@@ -45,15 +58,16 @@ typedef struct s_group
 	int			eat_ms;
 	int			size;
 	int			counter;
-	t_mutex		count;
+	char		count_name[4];
+	sem_t 		*count;
 }	t_group;
 
 typedef struct s_philo
 {
-	t_mutex			*fork_l;
-	t_mutex			*fork_r;
-	t_mutex			meal;
-	t_pth			pthread;
+	sem_t			*forks;
+	sem_t			*meal;
+	char			meal_name[6];
+	t_pid			pid;
 	t_pth			monitor;
 	int				index;
 	int				left_meal;
@@ -75,34 +89,39 @@ typedef struct s_data
 	int			eat_flag;
 	t_philo		*philo;
 	t_group		*group;
-	t_mutex		*forks;
-	t_mutex		write;
-	t_mutex		death;
-	t_mutex		flag;
+	sem_t		*forks;
+	sem_t		*write;
+	sem_t		*death;
+	sem_t		*flag;
+	t_pid		control;
+	t_pid		maniac;
 }	t_data;
 
 //philo.c
-void		beholder(t_philo *philo);
-int			main(int ac, char **av);
+void	ft_usleep(long long amount);
+void	beholder(t_philo *philo);
+int		create_child(t_data *data, int i);
+int		kill_childs(t_data *data);
+int		main(int ac, char **av);
 
 //parse.c
-void		init_groups(t_data *data);
-void		init_philo(t_data *data);
-int			parse_input(t_data *data, int ac, char **av);
-
-//utils.c
-void		action_log(t_philo *philo, int action, long long timestamp);
-int			print_error(int status, t_data *data);
-long		ft_atoi(const char *nptr);
-long long	ft_gettime(long long start);
-void		free_all(t_data *data);
+void	init_group_semaphore(t_data *data, int index);
+void	init_groups(t_data *data);
+void	init_philo(t_data *data);
+int		parse_input(t_data *data, int ac, char **av);
 
 //routine.c
-void		philo_eat(t_philo *philo, int eat_start);
-void		philo_round(t_philo *philo, t_data *data,
-				int eat_start, int sleep_start);
-void		routine(t_philo *philo);
-int			check_spinlock(t_data *data);
-void		controler(t_data *data);
+int		controler(t_data *data);
+void	philo_eat(t_philo *philo, int eat_start);
+void	philo_round(t_philo *philo, t_data *data,
+					int eat_start, int sleep_start);
+void	routine(t_philo *philo);
+
+//utils.c
+void	free_all(t_data *data);
+void	action_log(t_philo *philo, int action, long long timestamp);
+int	print_error(int status, t_data *data);
+long	ft_atoi(const char *nptr);
+long long	ft_gettime(long long start);
 
 #endif

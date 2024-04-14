@@ -10,7 +10,6 @@
 /*                                                                            */
 /* ************************************************************************** */
 
-//#include "../includes/philo.h"
 #include "philo.h"
 
 void	action_log(t_philo *philo, int action, long long timestamp)

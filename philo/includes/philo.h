@@ -82,6 +82,7 @@ typedef struct s_data
 }	t_data;
 
 //philo.c
+void		ft_usleep(long long amount);
 void		beholder(t_philo *philo);
 int			main(int ac, char **av);
 

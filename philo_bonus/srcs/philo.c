@@ -28,9 +28,6 @@ void	beholder(t_philo *philo)
 			i = -1;
 			while (++i < philo->data->nb_philo + 1)
 				sem_post(philo->data->death);
-			i = -1;
-			while (++i < 2 * philo->data->nb_philo)
-				sem_post(philo->data->forks);
 			return ;
 		}
 		sem_post(philo->meal);

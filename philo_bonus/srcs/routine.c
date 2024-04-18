@@ -93,8 +93,7 @@ void	routine(t_philo *philo)
 	{
 		ft_usleep(philo->data->die_ms * 1000);
 		action_log(philo, DIE, philo->data->die_ms);
-		sem_post(philo->data->death);
-		return ;
+		return (sem_post(philo->data->death), free(NULL));
 	}
 	while (philo->left_meal)
 	{
@@ -106,4 +105,5 @@ void	routine(t_philo *philo)
 		sleep_start += philo->group->round_len;
 		action_log(philo, THINK, think_start);
 	}
+	free_all(philo->data);
 }

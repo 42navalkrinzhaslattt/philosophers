@@ -99,13 +99,13 @@ typedef struct s_data
 }	t_data;
 
 //philo.c
-void		ft_usleep(long long amount);
 void		beholder(t_philo *philo);
 int			create_child(t_data *data, int i);
 int			kill_childs(t_data *data);
 int			main(int ac, char **av);
 
 //parse.c
+void		ft_usleep(long long amount);
 void		init_group_semaphore(t_data *data, int index);
 void		init_groups(t_data *data);
 void		init_philo(t_data *data);

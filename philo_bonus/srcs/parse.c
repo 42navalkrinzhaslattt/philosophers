@@ -12,6 +12,21 @@
 
 #include "philo.h"
 
+void	ft_usleep(long long amount)
+{
+	long long int	start;
+
+	start = ft_gettime(0);
+	if (amount == 500)
+	{
+		usleep(500);
+		return ;
+	}
+	while (ft_gettime(start) < amount / 1000)
+		usleep(500);
+	return ;
+}
+
 void	init_group_semaphore(t_data *data, int index)
 {
 	data->group[index].count_name[0] = '/';

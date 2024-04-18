@@ -12,24 +12,11 @@
 
 #include "philo.h"
 
-void	ft_usleep(long long amount)
-{
-	long long int	start;
-
-	start = ft_gettime(0);
-	if (amount == 500)
-	{
-		usleep(500);
-		return ;
-	}
-	while (ft_gettime(start) < amount / 1000)
-		usleep(500);
-	return ;
-}
-
 void	beholder(t_philo *philo)
 {
-	while (1)
+	int	i;
+
+	while (philo->left_meal)
 	{
 		usleep(500);
 		sem_wait(philo->meal);
@@ -38,7 +25,12 @@ void	beholder(t_philo *philo)
 		{
 			action_log(philo, DIE, -1);
 			sem_wait(philo->data->write);
-			sem_post(philo->data->death);
+			i = -1;
+			while (++i < philo->data->nb_philo + 1)
+				sem_post(philo->data->death);
+			i = -1;
+			while (++i < 2 * philo->data->nb_philo)
+				sem_post(philo->data->forks);
 			return ;
 		}
 		sem_post(philo->meal);

@@ -59,7 +59,7 @@ typedef struct s_group
 	int			size;
 	int			counter;
 	char		count_name[4];
-	sem_t 		*count;
+	sem_t		*count;
 }	t_group;
 
 typedef struct s_philo
@@ -69,6 +69,7 @@ typedef struct s_philo
 	char			meal_name[6];
 	t_pid			pid;
 	t_pth			monitor;
+	t_pth			cleaner;
 	int				index;
 	int				left_meal;
 	int				funeral;
@@ -98,30 +99,30 @@ typedef struct s_data
 }	t_data;
 
 //philo.c
-void	ft_usleep(long long amount);
-void	beholder(t_philo *philo);
-int		create_child(t_data *data, int i);
-int		kill_childs(t_data *data);
-int		main(int ac, char **av);
+void		ft_usleep(long long amount);
+void		beholder(t_philo *philo);
+int			create_child(t_data *data, int i);
+int			kill_childs(t_data *data);
+int			main(int ac, char **av);
 
 //parse.c
-void	init_group_semaphore(t_data *data, int index);
-void	init_groups(t_data *data);
-void	init_philo(t_data *data);
-int		parse_input(t_data *data, int ac, char **av);
+void		init_group_semaphore(t_data *data, int index);
+void		init_groups(t_data *data);
+void		init_philo(t_data *data);
+int			parse_input(t_data *data, int ac, char **av);
 
 //routine.c
-int		controler(t_data *data);
-void	philo_eat(t_philo *philo, int eat_start);
-void	philo_round(t_philo *philo, t_data *data,
-					int eat_start, int sleep_start);
-void	routine(t_philo *philo);
+int			controler(t_data *data);
+void		philo_eat(t_philo *philo, int eat_start);
+void		philo_round(t_philo *philo, t_data *data,
+				int eat_start, int sleep_start);
+void		routine(t_philo *philo);
 
 //utils.c
-void	free_all(t_data *data);
-void	action_log(t_philo *philo, int action, long long timestamp);
-int	print_error(int status, t_data *data);
-long	ft_atoi(const char *nptr);
+void		free_all(t_data *data);
+void		action_log(t_philo *philo, int action, long long timestamp);
+int			print_error(int status, t_data *data);
+long		ft_atoi(const char *nptr);
 long long	ft_gettime(long long start);
 
 #endif

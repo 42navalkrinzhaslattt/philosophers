@@ -83,7 +83,7 @@ int	main(int ac, char **av)
 	t_data	data;
 	int		i;
 
-	if (parse_input(&data, ac, av))
+	if (!parse_input(&data, ac, av))
 		return (EXIT_FAILURE);
 	i = -1;
 	while (++i < data.nb_philo)

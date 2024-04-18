@@ -16,7 +16,7 @@ INC_DIR = includes
 
 CC		= cc
 
-CFLAGS	= -Wall -Werror -Wextra -g #-fsanitize=thread
+CFLAGS	= -Wall -Werror -Wextra #-g -fsanitize=thread
 
 %.o: %.c $(INC_DIR)/philo.h
 	$(CC) $(CFLAGS) -I ./includes -c  $< -o $@

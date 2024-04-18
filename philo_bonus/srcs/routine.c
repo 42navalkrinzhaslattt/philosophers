@@ -12,9 +12,21 @@
 
 #include "philo.h"
 
-int	controler(t_data *data)
+void	controler_routine(t_data *data, int eat_flag)
 {
 	int	i;
+
+	i = -1;
+	while (++i < data->group[eat_flag].size)
+		sem_post(data->group[eat_flag].count);
+	ft_usleep(data->eat_ms * 1000);
+	i = -1;
+	while (++i < data->group[eat_flag].size)
+		sem_wait(data->group[eat_flag].count);
+}
+
+int	controler(t_data *data)
+{
 	int	eat_flag;
 	int	meals;
 
@@ -23,18 +35,12 @@ int	controler(t_data *data)
 	{
 		if (data->nb_philo == 1)
 			return (1);
-		meals = 0;
+		meals = -1;
 		eat_flag = 0;
 		while (data->nb_eat < 0 || (data->nb_eat > 0
-			&& meals < 3 * data->nb_eat))
+				&& meals < 3 * data->nb_eat))
 		{
-			i = -1;
-			while (++i < data->group[eat_flag].size)
-				sem_post(data->group[eat_flag].count);
-			ft_usleep(data->eat_ms * 1000);
-			i = -1;
-			while (++i < data->group[eat_flag].size)
-				sem_wait(data->group[eat_flag].count);
+			controler_routine(data, eat_flag);
 			eat_flag = (eat_flag + 1) % data->nb_group;
 			meals++;
 		}

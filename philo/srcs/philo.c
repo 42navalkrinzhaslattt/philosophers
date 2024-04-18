@@ -59,7 +59,7 @@ int	main(int ac, char **av)
 	int		i;
 	t_pth	control;
 
-	if (parse_input(&data, ac, av))
+	if (!parse_input(&data, ac, av))
 		return (EXIT_FAILURE);
 	init_groups(&data);
 	i = -1;

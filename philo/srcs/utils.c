@@ -55,29 +55,19 @@ long	ft_atoi(const char *nptr)
 {
 	int		i;
 	long	res;
-	int		sign;
 
 	i = 0;
 	res = 0;
-	sign = 1;
-	while ((nptr[i] >= 9 && nptr[i] <= 13) || nptr[i] == 32)
-		i++;
-	if (nptr[i] == '-' || nptr[i] == '+')
-	{
-		if (nptr[i] == '-')
-			sign = -1;
-		i++;
-	}
 	while (nptr[i] >= '0' && nptr[i] <= '9')
 	{
 		res = res * 10 + nptr[i] - 48;
-		if (res * sign > INT32_MAX || res * sign < INT32_MIN)
+		if (res > INT32_MAX || res < INT32_MIN)
 			return (-2);
 		i++;
 	}
 	if (nptr[i] != 0)
-		print_error(INV_ARG_STATUS, NULL);
-	return (res * sign);
+		return (-2);
+	return (res);
 }
 
 long long	ft_gettime(long long start)

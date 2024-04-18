@@ -79,7 +79,7 @@ int	parse_input(t_data *data, int ac, char **av)
 	data->eat_flag = 0;
 	if (ac == 6)
 		data->nb_eat = ft_atoi(av[5]);
-	if (data->nb_philo < 0 || data->die_ms < 0 || data->eat_ms < 0
+	if (data->nb_philo <= 0 || data->die_ms < 0 || data->eat_ms < 0
 		|| data->sleep_ms < 0 || data->nb_eat < -1)
 		return (print_error(INV_ARG_STATUS, data));
 	data->forks = malloc(data->nb_philo * sizeof(t_mutex));
@@ -90,5 +90,5 @@ int	parse_input(t_data *data, int ac, char **av)
 	pthread_mutex_init(&data->death, NULL);
 	pthread_mutex_init(&data->flag, NULL);
 	init_philo(data);
-	return (0);
+	return (1);
 }

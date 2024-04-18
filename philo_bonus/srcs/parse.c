@@ -14,12 +14,13 @@
 
 void	init_group_semaphore(t_data *data, int index)
 {
-	data->group[index].count_name[0] =  '/';
-	data->group[index].count_name[1] =  'G';
-	data->group[index].count_name[2] =  index + 48;
-	data->group[index].count_name[3] =  0;
+	data->group[index].count_name[0] = '/';
+	data->group[index].count_name[1] = 'G';
+	data->group[index].count_name[2] = index + 48;
+	data->group[index].count_name[3] = 0;
 	sem_unlink(data->group[index].count_name);
-	data->group[index].count = sem_open(data->group[index].count_name, O_CREAT | O_EXCL, 0700, 0);
+	data->group[index].count = sem_open(data->group[index].count_name,
+			O_CREAT | O_EXCL, 0700, 0);
 }
 
 void	init_groups(t_data *data)
@@ -65,7 +66,7 @@ void	init_philo(t_data *data)
 		data->philo[i].meal_name[5] = 0;
 		sem_unlink(data->philo[i].meal_name);
 		data->philo[i].meal = sem_open(data->philo[i].meal_name,
-			O_CREAT | O_EXCL, 0700, 1);
+				O_CREAT | O_EXCL, 0700, 1);
 		data->philo[i].data = data;
 		data->philo[i].index = i + 1;
 		data->philo[i].funeral = 0;
@@ -91,7 +92,7 @@ int	parse_input(t_data *data, int ac, char **av)
 	data->eat_flag = 0;
 	if (ac == 6)
 		data->nb_eat = ft_atoi(av[5]);
-	if (data->nb_philo < 0 || data->die_ms < 0 || data->eat_ms < 0
+	if (data->nb_philo <= 0 || data->die_ms < 0 || data->eat_ms < 0
 		|| data->sleep_ms < 0 || data->nb_eat < -1)
 		return (print_error(INV_ARG_STATUS, data));
 	data->philo = malloc(data->nb_philo * sizeof(t_philo));
@@ -103,5 +104,5 @@ int	parse_input(t_data *data, int ac, char **av)
 	data->death = sem_open(SEM_DEATH, O_CREAT | O_EXCL, 0700, 0);
 	init_philo(data);
 	init_groups(data);
-	return (0);
+	return (1);
 }

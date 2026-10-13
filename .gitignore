@@ -1,0 +1,5 @@
+*.o
+*.a
+philo/philo
+philo_bonus/philo
+.DS_Store

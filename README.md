@@ -1,266 +1,171 @@
 # Philosophers
 
-> *"I never thought philosophy would be so deadly"*
+The dining philosophers problem in C, solved twice: with threads and mutexes, and with processes and POSIX semaphores. Instead of letting philosophers race for forks, both versions split them into two or three groups and rotate which group may eat, so neighbours never compete for the same fork.
 
-A classic concurrency problem implemented in C using threads and processes to simulate the dining philosophers problem.
+**Stack:** C · POSIX threads · POSIX semaphores · Make    **Context:** 42 Berlin curriculum
 
-## 📋 Table of Contents
+## Table of Contents
 
 - [Overview](#overview)
-- [The Problem](#the-problem)  
-- [Project Structure](#project-structure)
-- [Requirements](#requirements)
-- [Installation](#installation)
+- [The Problem](#the-problem)
+- [Build](#build)
 - [Usage](#usage)
-- [Implementation Details](#implementation-details)
+- [How It Works](#how-it-works)
+- [Project Structure](#project-structure)
 - [Testing](#testing)
-- [Common Issues](#common-issues)
 
-## 🎯 Overview
+## Overview
 
-This project explores the fundamentals of threading and process synchronization through the classic **Dining Philosophers Problem**. The implementation includes two versions:
+Two independent programs, each built as `philo` in its own directory:
 
-- **Mandatory Part (`philo/`)**: Uses threads and mutexes
-- **Bonus Part (`philo_bonus/`)**: Uses processes and semaphores
+- **Mandatory part (`philo/`):** one thread per philosopher, one mutex per fork, a monitor thread per philosopher and a scheduler thread
+- **Bonus part (`philo_bonus/`):** one process per philosopher, all forks in one counting semaphore, a scheduler process, and the parent process killing everyone when the simulation ends
 
-## 🍝 The Problem
+## The Problem
 
-Philosophers sit around a circular table with a bowl of spaghetti in the center. Each philosopher alternates between three activities:
+`N` philosophers sit at a round table with one fork between each pair of neighbours. Each one repeatedly eats, sleeps and thinks:
 
-- **🍴 Eating**: Requires two forks (left and right)
-- **💭 Thinking**: Contemplating life's mysteries  
-- **😴 Sleeping**: Resting after a meal
+- **Eating** requires both adjacent forks
+- A philosopher dies if `time_to_die` ms pass since the start of their last meal (or the start of the simulation)
+- Philosophers don't communicate with each other
+- The simulation stops when a philosopher dies or, if the optional last argument is given, when everyone has eaten that many times
 
-### Rules
+## Build
 
-1. Philosophers cannot communicate with each other
-2. They don't know when others might die
-3. A philosopher dies if they don't start eating within `time_to_die` milliseconds
-4. To eat, a philosopher must acquire both adjacent forks
-5. The simulation stops when a philosopher dies or all have eaten enough times
-
-## 📁 Project Structure
-
-```
-philosophers/
-├── README.md
-├── philo/                    # Mandatory part (threads + mutexes)
-│   ├── Makefile
-│   ├── includes/
-│   │   └── philo.h
-│   └── srcs/
-│       ├── philo.c           # Main program and initialization
-│       ├── routine.c         # Philosopher routine and actions
-│       ├── parse.c           # Argument parsing and validation
-│       └── utils.c           # Utility functions
-└── philo_bonus/              # Bonus part (processes + semaphores)
-    ├── Makefile
-    ├── includes/
-    │   └── philo.h
-    └── srcs/
-        ├── philo.c           # Main program with processes
-        ├── routine.c         # Process-based philosopher routine
-        ├── parse.c           # Argument parsing and validation
-        └── utils.c           # Utility functions
-```
-
-## ⚙️ Requirements
-
-### System Requirements
-- **OS**: Unix-based system (Linux, macOS)
-- **Compiler**: `cc` with flags `-Wall -Wextra -Werror`
-- **Standards**: C99 or later
-
-### Allowed Functions
-
-**Mandatory Part:**
-- `memset`, `printf`, `malloc`, `free`, `write`
-- `usleep`, `gettimeofday`
-- `pthread_create`, `pthread_detach`, `pthread_join`
-- `pthread_mutex_init`, `pthread_mutex_destroy`
-- `pthread_mutex_lock`, `pthread_mutex_unlock`
-
-**Bonus Part:**
-- All mandatory functions plus:
-- `fork`, `kill`, `exit`, `waitpid`
-- `sem_open`, `sem_close`, `sem_post`, `sem_wait`, `sem_unlink`
-
-## 🚀 Installation
-
-### Mandatory Part (Threads)
+Requires a POSIX system (Linux or macOS) and `cc`.
 
 ```bash
-cd philo
-make
+cd philo && make          # threads + mutexes  -> philo/philo
+cd philo_bonus && make    # processes + semaphores -> philo_bonus/philo
 ```
-
-### Bonus Part (Processes)
 
 ```bash
-cd philo_bonus
-make
+make clean    # remove object files
+make fclean   # remove object files and the binary
+make re       # fclean + all
 ```
 
-### Clean Build Files
+Compiled with `-Wall -Wextra -Werror`.
 
-```bash
-make clean    # Remove object files
-make fclean   # Remove object files and executable
-make re       # Clean and rebuild
-```
-
-## 💻 Usage
-
-### Command Syntax
+## Usage
 
 ```bash
 ./philo number_of_philosophers time_to_die time_to_eat time_to_sleep [number_of_times_each_philosopher_must_eat]
 ```
 
-### Parameters
-
 | Parameter | Description |
 |-----------|-------------|
-| `number_of_philosophers` | Number of philosophers (and forks) |
-| `time_to_die` | Time in ms before a philosopher dies without eating |
+| `number_of_philosophers` | Number of philosophers (and forks), at least 1 |
+| `time_to_die` | Time in ms a philosopher can go without starting a meal |
 | `time_to_eat` | Time in ms a philosopher spends eating |
 | `time_to_sleep` | Time in ms a philosopher spends sleeping |
-| `number_of_times_each_philosopher_must_eat` | Optional: Stop after each philosopher eats this many times |
+| `number_of_times_each_philosopher_must_eat` | Optional: stop once each philosopher has eaten this many times |
 
-### Example Usage
+Arguments must be plain non-negative integers; anything else prints `philo: Invalid arguments` to stderr.
 
 ```bash
-# Basic simulation with 5 philosophers
-./philo 5 800 200 200
-
-# Simulation that stops after each philosopher eats 7 times
-./philo 5 800 200 200 7
-
-# Edge case: single philosopher (should die)
-./philo 1 800 200 200
-
-# Stress test with many philosophers
-./philo 200 800 200 200
+./philo 5 800 200 200       # runs until someone dies
+./philo 5 800 200 200 7     # stops after every philosopher has eaten 7 times
+./philo 1 800 200 200       # a single philosopher has one fork and dies
 ```
 
-## 🔧 Implementation Details
+### Output format
 
-### Mandatory Part (Threads + Mutexes)
-
-- Each philosopher is a separate thread
-- Each fork is protected by a mutex
-- Shared data structures for simulation state
-- Death checking runs in a separate monitoring thread
-
-### Bonus Part (Processes + Semaphores)
-
-- Each philosopher is a separate process  
-- Forks represented as a semaphore with N permits
-- Inter-process communication for death detection
-- Main process manages child processes
-
-### Output Format
-
-All state changes are logged with timestamps:
+Each state change is printed as `<ms since start> <philosopher> <action>`:
 
 ```
-142 1 has taken a fork
-142 1 has taken a fork  
-142 1 is eating
-344 1 is sleeping
-544 1 is thinking
-642 2 has taken a fork
+0 1 is thinking
+0 1 has taken a fork
+0 1 has taken a fork
+0 1 is eating
+200 1 is sleeping
 ...
 ```
 
-### Key Implementation Challenges
+Lines are indented with one tab per group number (none for group 0, one for group 1, two for group 2), which makes the eating rotation easy to see in the terminal.
 
-1. **Race Conditions**: Proper mutex/semaphore usage
-2. **Deadlock Prevention**: Careful fork acquisition order
-3. **Death Detection**: Timely monitoring without data races
-4. **Clean Termination**: Proper cleanup of threads/processes
+## How It Works
 
-## 🧪 Testing
+### Eating groups
 
-### Basic Test Cases
+At start-up the philosophers are split into groups such that no two neighbours share a group:
+
+- **Even `N`:** two groups, alternating seats (1, 3, 5, ... and 2, 4, 6, ...)
+- **Odd `N`:** three groups: philosopher 1 alone, the remaining even seats, and the remaining odd seats
+
+Only one group eats at a time. Group `g` starts eating at `g * time_to_eat`, and every philosopher repeats on a fixed period of
+
+```
+round_len = time_to_eat + max((groups - 1) * time_to_eat, time_to_sleep)
+```
+
+so the schedule is planned up front instead of emerging from contention.
+
+### Mandatory part (threads + mutexes)
+
+- **Philosopher threads** wait (polling every 0.5 ms) until their group is the active one, lock both forks, eat, increment their group's counter, then sleep and think.
+- **Fork order:** even-numbered philosophers lock their right fork first, odd-numbered ones their left, as a second guard against circular waiting.
+- **Scheduler thread (`controler`)** advances the active group once every member of the current group has eaten, then sleeps for about one meal (`time_to_eat`, or `time_to_sleep` at the end of a round when sleeping dominates the period) before checking again.
+- **Monitor threads (`beholder`)**, one per philosopher, check every 0.5 ms whether `time_to_die` has passed since that philosopher's last meal. On a death the monitor prints `died` and sets a `funeral` flag on every philosopher under a mutex; all threads check it and stop, and logging is suppressed after the death message.
+- Shared state is protected by separate mutexes: one per fork, one per philosopher for meal time and count, one per group counter, plus `write`, `death` and `flag` for output, the stop flag and the active group.
+
+### Bonus part (processes + semaphores)
+
+- **Philosopher processes:** each philosopher is a `fork()`ed child with its own detached monitor thread.
+- **Forks:** a single named semaphore initialised to `N`; a philosopher takes two units before eating.
+- **Scheduler process:** posts the active group's semaphore once per member, waits `time_to_eat`, collects the posts back, and moves to the next group. With a meal limit it stops after enough rounds and signals the end.
+- **Termination:** a `death` semaphore is posted when a philosopher dies or the meal limit is reached; the parent waits on it and kills all philosopher processes and the scheduler with `SIGKILL`.
+- Named semaphores are `sem_unlink`ed before creation, so leftovers from an earlier crashed run don't block start-up, and again at cleanup.
+
+### Timing
+
+`ft_usleep` sleeps in 0.5 ms steps and checks `gettimeofday` after each one, which avoids the overshoot of a single long `usleep`.
+
+## Project Structure
+
+```
+philosophers/
+├── philo/                    # mandatory part (threads + mutexes)
+│   ├── Makefile
+│   ├── includes/philo.h
+│   └── srcs/
+│       ├── philo.c           # main, thread start-up, monitor, ft_usleep
+│       ├── routine.c         # scheduler, philosopher routine, eating
+│       ├── parse.c           # argument parsing, group and philosopher setup
+│       └── utils.c           # logging, errors, atoi, time, cleanup
+└── philo_bonus/              # bonus part (processes + semaphores)
+    ├── Makefile
+    ├── includes/philo.h
+    └── srcs/
+        ├── philo.c           # main, child processes, monitor, kill on death
+        ├── routine.c         # scheduler process, philosopher routine
+        ├── parse.c           # parsing, semaphore setup, ft_usleep
+        └── utils.c           # logging, errors, cleanup
+```
+
+## Testing
+
+Standard evaluation cases from the subject, with the expected outcome:
 
 ```bash
-# Should not die
+# Nobody should die
 ./philo 5 800 200 200
 ./philo 4 410 200 200
 
-# Should die  
+# A philosopher should die
 ./philo 1 800 200 200
 ./philo 4 310 200 100
 
-# Edge cases
-./philo 2 800 200 200
+# Each philosopher eats 7 times, then the program exits
+./philo 5 800 200 200 7
+
+# Larger tables
 ./philo 100 800 200 200
-```
-
-### Performance Testing
-
-```bash
-# Stress test with many philosophers
 ./philo 200 800 200 200
-
-# Quick death scenario
-./philo 4 310 200 100
 ```
 
-### Validation Checklist
-
-- [ ] No philosopher dies unexpectedly
-- [ ] Death detection within 10ms
-- [ ] No data races (use thread sanitizer)
-- [ ] No memory leaks (use valgrind)
-- [ ] Proper cleanup on exit
-- [ ] Correct timestamp formatting
-- [ ] Message ordering consistency
-
-## 🐛 Common Issues
-
-### Data Races
-- **Problem**: Unsynchronized access to shared variables
-- **Solution**: Protect all shared data with mutexes/semaphores
-
-### Deadlocks
-- **Problem**: Circular waiting for resources
-- **Solution**: Consistent fork acquisition order or timeout mechanisms
-
-### Death Detection Delays
-- **Problem**: Death not detected within 10ms
-- **Solution**: Frequent monitoring with minimal sleep intervals
-
-### Memory Leaks
-- **Problem**: Unreleased mutexes or unjoined threads
-- **Solution**: Proper cleanup in exit paths
-
-### Timing Issues
-- **Problem**: Incorrect use of `usleep()` or timing calculations
-- **Solution**: Use `gettimeofday()` for accurate timestamps
-
-## 📚 Learning Objectives
-
-This project teaches:
-
-- **Threading**: Creating and managing threads
-- **Synchronization**: Mutexes, semaphores, and critical sections
-- **Concurrency**: Race conditions, deadlocks, and their prevention
-- **Process Management**: Fork, exec, and inter-process communication
-- **System Programming**: Low-level timing and resource management
-
-## 🏆 Evaluation Criteria
-
-- **Functionality**: Correct simulation behavior
-- **Thread Safety**: No data races or undefined behavior  
-- **Resource Management**: Proper cleanup and no leaks
-- **Error Handling**: Graceful handling of edge cases
-- **Code Quality**: Clean, readable, and well-structured code
-- **Performance**: Efficient resource usage
+To look for data races in the mandatory part, add `-g -fsanitize=thread` to `CFLAGS` in `philo/Makefile` (it is already there, commented out).
 
 ---
 
-*"The unexamined life is not worth living." - Socrates*
-
-But apparently, the unexamined spaghetti is quite deadly! 🍝💀
+42 Berlin project by Nam Lap Vu ([42navalkrinzhaslattt](https://github.com/42navalkrinzhaslattt)).
